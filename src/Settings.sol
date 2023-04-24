@@ -10,6 +10,7 @@ import "./interfaces/ISettings.sol";
  * @dev This contract is used to store and manage the settings for the project.
  */
 contract Settings is Ownable, ISettings {
+    uint256 public constant TOKEN0_MAX_LIMIT_PER_TX = 20_000 ether;
     uint256 public EXCHANGE_RATE;
     uint256 public EXCHANGE_DURATION;
     uint256 public EXCHANGE_END_AT_UNIX_TIME;

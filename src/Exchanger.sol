@@ -22,6 +22,10 @@ contract Exchanger is Ownable, IExchanger, Settings {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
+    // TOKEN0 and TOKEN1 decimals
+    uint256 public immutable token0Decimals;
+    uint256 public immutable token1Decimals;
+
     // The address of the TOKEN0 contract
     address public TOKEN0;
 
@@ -50,6 +54,10 @@ contract Exchanger is Ownable, IExchanger, Settings {
     ) Settings(initialExchangeRate, exchangePeriodDuration) {
         TOKEN0 = token0;
         TOKEN1 = token1;
+
+        // Get the decimals of TOKEN0 and TOKEN1
+        token0Decimals = ERC20(TOKEN0).decimals();
+        token1Decimals = ERC20(TOKEN1).decimals();
     }
 
     /**
@@ -77,6 +85,8 @@ contract Exchanger is Ownable, IExchanger, Settings {
     function exchange(uint256 token0Amount) external {
         // Check if token0Amount is not zero
         if (token0Amount == 0) revert Exchanger_Token0_Amount_Cannot_Be_Zero();
+        if (token0Amount > TOKEN0_MAX_LIMIT_PER_TX)
+            revert Exchanger_Token0_Amount_Reached_Limit_Per_Transaction();
 
         // Check if the contract has a non-zero balance of TOKEN1
         uint256 token1Balance = IERC20(TOKEN1).balanceOf(address(this));
@@ -107,9 +117,7 @@ contract Exchanger is Ownable, IExchanger, Settings {
     function calculateExchangeAmount(
         uint256 token0Amount
     ) internal view returns (uint256) {
-        // Get the decimals of TOKEN0 and TOKEN1
-        uint256 token0Decimals = ERC20(TOKEN0).decimals();
-        uint256 token1Decimals = ERC20(TOKEN1).decimals();
+        console.log("token0Amount", token0Amount);
 
         // Calculate and return the amount of TOKEN1 to be exchanged
         return

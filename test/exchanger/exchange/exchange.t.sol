@@ -66,4 +66,36 @@ contract ExchangeTest is ExchangerTest {
 
         vm.stopPrank();
     }
+
+    function testFuzz_BobCanExchangeToken0ForToken1(
+        uint256 amountToExchange
+    ) public {
+        vm.assume(
+            amountToExchange > 0 &&
+                amountToExchange <= exchanger.TOKEN0_MAX_LIMIT_PER_TX()
+        );
+        vm.startPrank(bob);
+        token0.approve(address(exchanger), amountToExchange);
+
+        deal(TOKEN0_ADDRESS, bob, amountToExchange);
+        deal(TOKEN1_ADDRESS, address(exchanger), amountToExchange * 10);
+
+        uint256 previewValue = exchanger.previewExchange(amountToExchange);
+
+        vm.expectEmit(true, true, true, true);
+        emit Exchanged(bob, amountToExchange, previewValue);
+
+        uint256 token0BalanceBefore = token0.balanceOf(bob);
+        uint256 token1BalanceBefore = token1.balanceOf(bob);
+
+        exchanger.exchange(amountToExchange);
+
+        uint256 token0BalanceAfter = token0.balanceOf(bob);
+        uint256 token1BalanceAfter = token1.balanceOf(bob);
+
+        assertEq(token0BalanceBefore - amountToExchange, token0BalanceAfter);
+        assertEq(token1BalanceBefore + previewValue, token1BalanceAfter);
+
+        vm.stopPrank();
+    }
 }
